@@ -1,10 +1,9 @@
 import fetch from 'node-fetch';
 global.Headers = fetch.Headers;
 let url = "https://omni.cp.ru/"
-const token = "==";
+const token = "";
 let userTickets = {};
-let tickets = {};
-let userTicketsGrafana = {};
+let userTicketsGrafana = "";
 
 async function reqHde(endpoint, param, offset = 1) {
   try {
@@ -66,13 +65,9 @@ function translit(word) {
   return answer.replace(/\u0301/g, "");
 }
 
-
-
-
-
 async function main() {
 
-  const users = await reqHde("users", "&group_list=17,18,19,10,2,");
+  const users = await reqHde("users", "&group_list=29,17,18,19,10,2,");
 
   const tickets = await reqHde("tickets", "&search=Отдел технической поддержки&status_list=open,v-processe,6");
 
@@ -80,41 +75,78 @@ async function main() {
     userTickets[users[i].id] =
     {
       name: `${users[i].name} ${users[i].lastname}`,
-      user_status: `${users[i].user_status}`,
-      ticketCount: 0
+      user_status: `${users[i].user_status}` == 'offline' ? '' : '🟢',
+      ticketCount: 0,
+      open: 0,
+      inwork: 0,
+      waiting: 0
     }
   }
 
   for (let i = 0; i < tickets.length; i++) {
+    
 
-    if (userTickets[tickets[i].owner_id]) {
+    if (userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].open || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].inwork || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].waiting) {
+      userTickets[tickets[i].owner_id].ticketCount += 1
 
-      if (userTickets[tickets[i].owner_id].ticketCount) {
-
-        userTickets[tickets[i].owner_id].ticketCount += 1
-
-      } else {
-
+      switch (tickets[i].status_id) {
+        case "open":
+          userTickets[tickets[i].owner_id].open += 1
+          break;
+        case "v-processe":
+          userTickets[tickets[i].owner_id].inwork += 1
+          break;
+        case "6":
+          userTickets[tickets[i].owner_id].waiting += 1
+          break;
+        
+        }
+    } else {
+      if (userTickets[tickets[i].owner_id]) {
         userTickets[tickets[i].owner_id].ticketCount = 1
-
+     
+      switch (tickets[i].status_id) {
+        case "open":
+          userTickets[tickets[i].owner_id].open = 1
+          break;
+        case "v-processe":
+          userTickets[tickets[i].owner_id].inwork = 1
+          break;
+        case "6":
+          userTickets[tickets[i].owner_id].waiting = 1
+          break;
+        
+        }
       }
-
     }
 
   }
+  userTicketsGrafana += `
+# TYPE hde_tickets_info counter`
 
+  //генерируем метрики для отображении тикетов в работе
   for (let key in userTickets) {
 
     if (userTickets[key]) {
       userTicketsGrafana +=
-        `
-# TYPE hde_${translit(userTickets[key].name)}_tik_in_work gauge
-hde_${translit(userTickets[key].name)}_tik_in_work ${userTickets[key].ticketCount}`;
+`
+hde_tickets_info{status="Новая", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].open}
+hde_tickets_info{status="В работе", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].inwork}
+hde_tickets_info{status="В ожидании", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].waiting}`;
     }
 
   }
-  console.log(userTicketsGrafana)
 
+  userTicketsGrafana += `\n`
+
+  var requestOptions = {
+    method: 'POST',
+    body: userTicketsGrafana
+  };
+  console.log(userTicketsGrafana)
+  fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
+    .then(response => response.text())
+    .catch(error => console.log('error', error));
 
 }
 
