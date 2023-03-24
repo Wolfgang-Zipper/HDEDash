@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 global.Headers = fetch.Headers;
 let url = "https://omni.cp.ru/"
-const token = "";
+const token = "==";
 let userTickets = {};
 let userTicketsGrafana = "";
 
@@ -67,7 +67,7 @@ function translit(word) {
 
 async function main() {
 
-  const users = await reqHde("users", "&group_list=29,17,18,19,10,2,");
+  const users = await reqHde("users", "&group_list=29");
 
   const tickets = await reqHde("tickets", "&search=Отдел технической поддержки&status_list=open,v-processe,6");
 
@@ -84,7 +84,8 @@ async function main() {
   }
 
   for (let i = 0; i < tickets.length; i++) {
-    
+    console.log(tickets[i].custom_fields)
+
 
     if (userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].open || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].inwork || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].waiting) {
       userTickets[tickets[i].owner_id].ticketCount += 1
@@ -130,9 +131,9 @@ async function main() {
     if (userTickets[key]) {
       userTicketsGrafana +=
 `
-hde_tickets_info{status="Новая", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].open}
-hde_tickets_info{status="В работе", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].inwork}
-hde_tickets_info{status="В ожидании", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].waiting}`;
+helpdeskeddy_tickets_info{status="Новая", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].open}
+helpdeskeddy_tickets_info{status="В работе", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].inwork}
+helpdeskeddy_tickets_info{status="В ожидании", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].waiting}`;
     }
 
   }
@@ -143,10 +144,9 @@ hde_tickets_info{status="В ожидании", id="${userTickets[key].name}", on
     method: 'POST',
     body: userTicketsGrafana
   };
-  console.log(userTicketsGrafana)
-  fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
-    .then(response => response.text())
-    .catch(error => console.log('error', error));
+  // fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
+  //   .then(response => response.text())
+  //   .catch(error => console.log('error', error));
 
 }
 
