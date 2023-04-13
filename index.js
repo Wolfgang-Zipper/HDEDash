@@ -1,5 +1,10 @@
+import { CronJob } from 'cron';
 import fetch from 'node-fetch';
 global.Headers = fetch.Headers;
+
+
+var job = new CronJob('*/1 * * * *', function () {
+
 let url = "https://omni.cp.ru/"
 const token = "==";
 let userTickets = {};
@@ -67,15 +72,31 @@ function translit(word) {
 
 async function main() {
 
-  const users = await reqHde("users", "&group_list=29");
+  const users = await reqHde("users", "&group_list=29,17,18,19,10,2");
 
   const tickets = await reqHde("tickets", "&search=Отдел технической поддержки&status_list=open,v-processe,6");
 
   for (let i = 0; i < users.length; i++) {
+
+    
+    let hde_user_status;
+
+    switch (users[i].user_status) {
+      case "online":
+        hde_user_status = '🟢';
+        break;
+      case "on-hold":
+        hde_user_status = '🟡';
+        break;
+      case "offline":
+        hde_user_status = '';
+        break;
+    }
+
     userTickets[users[i].id] =
     {
       name: `${users[i].name} ${users[i].lastname}`,
-      user_status: `${users[i].user_status}` == 'offline' ? '' : '🟢',
+      user_status: hde_user_status,
       ticketCount: 0,
       open: 0,
       inwork: 0,
@@ -84,7 +105,6 @@ async function main() {
   }
 
   for (let i = 0; i < tickets.length; i++) {
-    console.log(tickets[i].custom_fields)
 
 
     if (userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].open || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].inwork || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].waiting) {
@@ -139,15 +159,22 @@ helpdeskeddy_tickets_info{status="В ожидании", id="${userTickets[key].n
   }
 
   userTicketsGrafana += `\n`
+  console.log(userTicketsGrafana)
 
   var requestOptions = {
     method: 'POST',
     body: userTicketsGrafana
   };
-  // fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
-  //   .then(response => response.text())
-  //   .catch(error => console.log('error', error));
+  fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
+    .then(response => response.text())
+    .catch(error => console.log('error', error));
 
 }
 
 main();
+
+
+}, null, true, 'Europe/Moscow');
+job.start();
+
+
