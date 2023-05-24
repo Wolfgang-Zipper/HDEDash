@@ -72,13 +72,15 @@ function translit(word) {
 
 async function main() {
 
-  const users = await reqHde("users", "&group_list=29,17,18,19,10,2");
+  const users = await reqHde("users", "&group_list=17,18,19,10,37");
 
-  const tickets = await reqHde("tickets", "&search=Отдел технической поддержки&status_list=open,v-processe,6");
+
+  let owner_list = ""
+
 
   for (let i = 0; i < users.length; i++) {
 
-    
+    owner_list +=  users[i].id + ","
     let hde_user_status;
 
     switch (users[i].user_status) {
@@ -91,6 +93,9 @@ async function main() {
       case "offline":
         hde_user_status = '';
         break;
+      case "vremenno-o":
+        hde_user_status = '🔴';
+        break;
     }
 
     userTickets[users[i].id] =
@@ -100,11 +105,53 @@ async function main() {
       ticketCount: 0,
       open: 0,
       inwork: 0,
-      waiting: 0
+      waiting: 0,
+      cloudTips: 0,
+      cloudKassir: 0,
+      cloudPayments: 0,
+      otherAppeals: 0
     }
   }
 
+  const tickets = await reqHde("tickets", `&status_list=open,v-processe,6&owner_list=${owner_list}`);
+
+
+
   for (let i = 0; i < tickets.length; i++) {
+    for ( let key1 in tickets[i].custom_fields) {
+    if (tickets[i].custom_fields[key1] && tickets[i].custom_fields[key1].id===20) {
+
+      for ( let key2 in tickets[i].custom_fields[key1].field_value) {
+
+        switch (tickets[i].custom_fields[key1].field_value[key2].id) {
+          
+          case 209:
+            // console.log( tickets[i])
+            // console.log( userTickets[tickets[i].owner_id])
+            userTickets[tickets[i].owner_id].otherAppeals += 1
+           
+            break;           
+        
+          case 96:
+            userTickets[tickets[i].owner_id].cloudPayments += 1
+
+            break;
+          case 158:
+            userTickets[tickets[i].owner_id].cloudKassir += 1
+
+            break;
+          case 184:
+            userTickets[tickets[i].owner_id].cloudTips += 1
+          
+            break;
+          }
+
+      }
+      
+     
+    }
+    }
+    
 
 
     if (userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].open || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].inwork || userTickets[tickets[i].owner_id] && userTickets[tickets[i].owner_id].waiting) {
@@ -142,6 +189,9 @@ async function main() {
     }
 
   }
+
+
+ 
   userTicketsGrafana += `
 # TYPE hde_tickets_info counter`
 
@@ -153,7 +203,12 @@ async function main() {
 `
 helpdeskeddy_tickets_info{status="Новая", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].open}
 helpdeskeddy_tickets_info{status="В работе", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].inwork}
-helpdeskeddy_tickets_info{status="В ожидании", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].waiting}`;
+helpdeskeddy_tickets_info{status="В ожидании", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].waiting}
+helpdeskeddy_tickets_info{category="CloudTips", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].cloudTips}
+helpdeskeddy_tickets_info{category="CloudKassir", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].cloudKassir}
+helpdeskeddy_tickets_info{category="CloudPayments", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].cloudPayments}
+helpdeskeddy_tickets_info{category="Другие обращения", id="${userTickets[key].name}", online="${userTickets[key].user_status}"} ${userTickets[key].otherAppeals}`;
+
     }
 
   }
