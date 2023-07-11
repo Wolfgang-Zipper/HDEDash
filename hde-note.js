@@ -5,7 +5,7 @@ global.Headers = fetch.Headers;
 
 var job = new CronJob('*/1 * * * *', function () { //шедулер, для выполнения кода каждую секунду
 
-let url = "https://omni.cp.ru/"
+let url = "https://"
 
 const token = "==";
 
@@ -83,7 +83,7 @@ async function main() { // выполняем запрос, сортируем �
 
       //шлем в телеграмм
 
-       fetch(encodeURI(`https://api.telegram.org/__/sendMessage?chat_id=284648736&text=Тикет: https://omni.cp.ru/ru/ticket/list/filter/id/1/ticket/${tickets_update_previous_minute[key].id} 
+       fetch(encodeURI(`https://api.telegram.org/__/sendMessage?chat_id=__&text=Тикет: https://__/ru/ticket/list/filter/id/1/ticket/${tickets_update_previous_minute[key].id} 
         Клиент: ${tickets_update_previous_minute[key].user_name}
         Тема: ${tickets_update_previous_minute[key].title} 
         Текст комментария: ${tickets_update_previous_minute[key].owner_name} `))

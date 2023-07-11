@@ -12,9 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.0.6",
-    "node-fetch": "^3.3.1",
+    "cron": "^2.3.1",
     "forever": "^4.0.1",
-    "forever-monitor": "^3.0.3"
+    "forever-monitor": "^3.0.3",
+    "node-fetch": "^3.3.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"

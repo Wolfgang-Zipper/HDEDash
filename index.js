@@ -5,7 +5,7 @@ global.Headers = fetch.Headers;
 
 var job = new CronJob('*/1 * * * *', function () {
 
-let url = "https://omni.cp.ru/"
+let url = "https:///"
 const token = "==";
 let userTickets = {};
 let userTicketsGrafana = "";
@@ -89,7 +89,7 @@ async function sendMetricsProm(metrics) {
     method: 'POST',
     body: metrics
   };
-  fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
+  fetch("http://metrics", requestOptions)
     .then(response => response.text())
     .catch(error => console.log('error', error));
 }
@@ -354,8 +354,8 @@ job.start();
 
 
 var job = new CronJob('30 59 * * * *', function() {
-  let url = "https://omni.cp.ru/"
-const token = "c3VwcG9ydF90ZWFtQGNwLnJ1OjVkYTlmOWIzLWI5M2ItNGY2Ny1hMTA0LTRhYzExOTczMGUyMg==";
+  let url = ""
+const token = "==";
 let userTickets = {};
 let userTicketsGrafana = "";
 let userTicketsGrafanaCategory = "";
@@ -398,7 +398,7 @@ async function sendMetricsProm(metrics) {
     method: 'POST',
     body: metrics
   };
-  fetch("http://dn-adm-ent-prom-01.node.dtln-nord-ent.consul:9091/metrics/job/hde_ticket_job/instance/dn-app-ent-support-01", requestOptions)
+  fetch("", requestOptions)
     .then(response => response.text())
     .catch(error => console.log('error', error));
 }
