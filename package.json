@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,12 +12,17 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.0.6",
-    "cron": "^2.3.1",
+    "cron": "^2.4.4",
     "forever": "^4.0.1",
     "forever-monitor": "^3.0.3",
-    "node-fetch": "^3.3.1"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.7"
-  }
+    "node-fetch": "^3.3.1",
+    "chai": "^4.3.7",
+    "eslint": "^8.46.0",
+    "mocha": "^10.2.0",
+    "prettier": "^3.0.1"
+ 
+},
+"devDependencies": {
+  "nodemon": "^2.0.7"
+}
 }
